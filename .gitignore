@@ -1,0 +1,17 @@
+# Резервные копии, которые создаёт инструмент
+*.ablua.bak
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Тестовый мусор
+.pytest_cache/
+.coverage
+
+# Временные файлы обмена
+extras/temp.7z
+extras/temp.bin

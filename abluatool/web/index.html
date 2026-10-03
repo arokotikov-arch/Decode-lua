@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Активатор PC-версий Angry Birds</title>
+<style>
+  :root {
+    --red: #d92b2b;
+    --red-dark: #a81f1f;
+    --yellow: #ffc931;
+    --ink: #20232a;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f7f7f9;
+    --ok: #15803d;
+    --warn: #b45309;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 16px 22px;
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18);
+  }
+  header h1 { margin: 0; font-size: 19px; letter-spacing: .2px; }
+  header .sub { opacity: .85; font-size: 13px; }
+  header .spacer { flex: 1; }
+  button {
+    font: inherit; cursor: pointer;
+    border: 1px solid transparent; border-radius: 10px;
+    padding: 8px 14px; background: #fff; color: var(--ink);
+    transition: transform .05s ease-in-out, background .15s;
+  }
+  button:hover { background: #f1f1f4; }
+  button:active { transform: translateY(1px); }
+  button.primary { background: var(--yellow); color: #3b2d00; font-weight: 600; }
+  button.primary:hover { background: #ffd75e; }
+  button.danger { background: #fff; color: var(--red-dark); border-color: #f3c3c3; }
+  button.small { padding: 5px 10px; font-size: 13px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  main {
+    display: grid; gap: 18px;
+    grid-template-columns: minmax(320px, 1fr) minmax(380px, 1.4fr);
+    padding: 18px 22px 40px;
+    max-width: 1400px; margin: 0 auto;
+  }
+  .panel {
+    background: #fff; border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .panel h2 { margin: 0 0 10px; font-size: 16px; }
+  .panel h2 .count { color: var(--muted); font-weight: 400; font-size: 14px; }
+  .full { grid-column: 1 / -1; }
+  .hint { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .card {
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    margin-bottom: 10px; background: #fff;
+  }
+  .card.active { border-color: #bfe3c6; background: #f4fbf6; }
+  .card.broken { border-color: #f3c3c3; background: #fdf5f5; }
+  .card .title { font-weight: 600; margin-bottom: 4px; }
+  .card .path { color: var(--muted); font-size: 12.5px; word-break: break-all; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .badge {
+    display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px;
+    background: #eef1f5; color: var(--muted); margin-right: 6px;
+  }
+  .badge.ok { background: #e3f6e9; color: var(--ok); }
+  .badge.warn { background: #fdf2d9; color: var(--warn); }
+  table.meta { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.meta td { padding: 4px 0; vertical-align: top; }
+  table.meta td:first-child { color: var(--muted); width: 130px; }
+  textarea {
+    width: 100%; min-height: 260px; margin-top: 10px; padding: 10px;
+    font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    border: 1px solid var(--line); border-radius: 10px; resize: vertical;
+    background: #fcfcfd; color: #111827;
+  }
+  #log { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+         max-height: 260px; overflow: auto; background: #0f172a; color: #d7e3f4;
+         border-radius: 10px; padding: 10px 12px; }
+  #log div { white-space: pre-wrap; }
+  #log .ok { color: #86efac; }
+  #log .err { color: #fca5a5; }
+  #log .info { color: #93c5fd; }
+  ul.listing { list-style: none; margin: 10px 0 0; padding: 0; max-height: 260px; overflow: auto; }
+  ul.listing li { padding: 4px 6px; border-radius: 8px; display: flex; justify-content: space-between; gap: 10px; }
+  ul.listing li:hover { background: #f3f4f6; }
+  ul.listing li span.size { color: var(--muted); font-size: 12px; }
+  a.link { color: var(--red-dark); }
+  .pathbar { display: flex; gap: 8px; }
+  .pathbar input {
+    flex: 1; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px;
+    font: 13px ui-monospace, Menlo, Consolas, monospace;
+  }
+  .flags { margin-top: 8px; }
+  .flag { display: inline-flex; gap: 6px; align-items: center; margin-right: 12px; font-size: 13px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--warn); display: inline-block; }
+  .dot.off { background: var(--ok); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🎯 Активатор PC-версий Angry Birds</h1>
+    <div class="sub">выключает регистрацию и проверку обновлений в options.lua · версия <span id="ver">?</span></div>
+  </div>
+  <div class="spacer"></div>
+  <button id="letsgo" class="primary">🎉 LET'S GOOO! — активировать всё</button>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Найденные игры <span class="count" id="games-count"></span></h2>
+    <div class="hint" id="games-hint">Поиск идёт в рабочем каталоге и в стандартных папках Rovio.</div>
+    <div class="row">
+      <input id="root-input" class="pathbar" style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font:13px ui-monospace,Menlo,Consolas,monospace" placeholder="Другая папка с играми…">
+      <button class="small" id="scan-btn">Найти игры</button>
+    </div>
+    <div id="gamelist"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Файл</h2>
+    <div class="hint">Выберите файл слева или просмотрите каталоги внизу.</div>
+    <div id="details"><div class="hint">Ничего не выбрано.</div></div>
+    <div id="editor-wrap" style="display:none">
+      <textarea id="editor" spellcheck="false"></textarea>
+      <div class="row">
+        <button class="primary" id="save-btn">💾 Сохранить правку в файл</button>
+        <span class="hint" style="margin:0">Флаги <code>true</code> будут заменены на <code>false</code>.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel full">
+    <h2>Обзор каталогов</h2>
+    <div class="pathbar">
+      <input id="browse-path" placeholder="Путь внутри рабочего каталога">
+      <button class="small" id="browse-up">Вверх</button>
+      <button class="small" id="browse-go">Открыть</button>
+    </div>
+    <ul class="listing" id="listing"></ul>
+  </section>
+
+  <section class="panel full">
+    <h2>Журнал операций</h2>
+    <div id="log"></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const state = { root: "", selected: null };
+
+  function log(message, kind) {
+    const line = document.createElement("div");
+    line.className = kind || "";
+    const time = new Date().toLocaleTimeString("ru-RU");
+    line.textContent = "[" + time + "] " + message;
+    $("log").prepend(line);
+  }
+
+  async function api(path, body) {
+    const options = body
+      ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+      : { method: "GET" };
+    const response = await fetch(path, options);
+    const data = await response.json().catch(() => ({ ok: false, error: "сервер вернул не JSON" }));
+    if (!data.ok && data.error) throw new Error(data.error);
+    return data;
+  }
+
+  function flagRow(flags) {
+    if (!flags || !Object.keys(flags).length) return '<div class="hint">Флаги не найдены.</div>';
+    return '<div class="flags">' + Object.entries(flags).map(([name, value]) =>
+      '<span class="flag"><span class="dot ' + (value === "false" ? "off" : "") + '"></span>' +
+      name + " = " + value + "</span>").join("") + "</div>";
+  }
+
+  function renderGames(payload) {
+    state.root = payload.root || state.root;
+    $("browse-path").value = state.root;
+    const games = payload.games || [];
+    $("games-count").textContent = games.length ? "(" + games.length + ")" : "";
+    const container = $("gamelist");
+    container.innerHTML = "";
+    if (!games.length) {
+      container.innerHTML = '<div class="hint">Игры не найдены. Укажите папку вручную или ' +
+        'проверьте, установлена ли игра.</div>';
+      return;
+    }
+    games.forEach((game) => {
+      const card = document.createElement("div");
+      const files = game.files || [];
+      const allActive = files.length && files.every((f) => f.active);
+      card.className = "card" + (allActive ? " active" : "") + (files.some((f) => f.error) ? " broken" : "");
+      let html = '<div class="title">' + escapeHtml(game.title) +
+        (allActive ? ' <span class="badge ok">уже активировано</span>' : '<span class="badge warn">нужна активация</span>') +
+        "</div>";
+      html += '<div class="path">' + escapeHtml(game.path) + "</div>";
+      if (!files.length) {
+        html += '<div class="hint" style="margin:6px 0 0">options.lua не найден — возможно, игра ещё не запускалась.</div>';
+      }
+      card.innerHTML = html;
+      const row = document.createElement("div");
+      row.className = "row";
+      files.forEach((file) => {
+        const open = document.createElement("button");
+        open.className = "small";
+        open.textContent = file.active ? "Посмотреть" : "Открыть файл";
+        open.onclick = () => loadFile(file.path);
+        row.appendChild(open);
+
+        const activate = document.createElement("button");
+        activate.className = "small primary";
+        activate.textContent = "Активировать";
+        activate.disabled = !!file.error || file.active;
+        activate.onclick = () => activateFile(file.path);
+        row.appendChild(activate);
+
+        const restore = document.createElement("button");
+        restore.className = "small danger";
+        restore.textContent = "Откатить";
+        restore.disabled = !file.has_backup;
+        restore.onclick = () => restoreFile(file.path);
+        row.appendChild(restore);
+      });
+      card.appendChild(row);
+      container.appendChild(card);
+    });
+  }
+
+  function escapeHtml(text) {
+    return String(text == null ? "" : text).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  async function loadState(root) {
+    try {
+      const query = root ? "?root=" + encodeURIComponent(root) : "";
+      const payload = await api("/api/state" + query);
+      renderGames(payload);
+      log("Найдено установок: " + (payload.games || []).length, "info");
+    } catch (error) {
+      log("Ошибка поиска: " + error.message, "err");
+    }
+  }
+
+  async function loadFile(path) {
+    try {
+      const payload = await api("/api/analyze", { path });
+      state.selected = path;
+      const file = payload.file || {};
+      let html = '<table class="meta">';
+      html += "<tr><td>Путь</td><td>" + escapeHtml(path) + "</td></tr>";
+      html += "<tr><td>Игра</td><td>" + escapeHtml(file.game || "не определена") + "</td></tr>";
+      html += "<tr><td>Контейнер</td><td>" + escapeHtml(file.container || "?") + "</td></tr>";
+      html += "<tr><td>Содержимое</td><td>" + escapeHtml(file.kind || "?") + "</td></tr>";
+      html += "<tr><td>Копия</td><td>" + (file.has_backup ? "есть (.ablua.bak)" : "нет") + "</td></tr>";
+      if (file.error) html += '<tr><td>Ошибка</td><td style="color:#b91c1c">' + escapeHtml(file.error) + "</td></tr>";
+      html += "</table>";
+      html += flagRow(file.flags);
+
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML =
+        '<button class="small primary" id="act-btn">Активировать</button>' +
+        '<button class="small danger" id="rest-btn">Откатить</button>' +
+        '<button class="small" id="dec-btn">Показать расшифрованный файл</button>' +
+        '<button class="small" id="dl-btn">Скачать расшифрованное</button>';
+      $("details").innerHTML = html;
+      $("details").appendChild(row);
+      $("editor-wrap").style.display = "none";
+      $("editor").value = "";
+
+      $("act-btn").onclick = () => activateFile(path);
+      $("rest-btn").onclick = () => restoreFile(path);
+      $("dec-btn").onclick = () => showDecrypted(path);
+      $("dl-btn").onclick = () => downloadDecrypted(path);
+
+      if (payload.text != null) {
+        $("editor").value = payload.text;
+        $("editor-wrap").style.display = "";
+      } else if (payload.note) {
+        $("details").insertAdjacentHTML("beforeend", '<div class="hint">' + escapeHtml(payload.note) + "</div>");
+      }
+      log("Открыт файл: " + path, "info");
+    } catch (error) {
+      log("Ошибка: " + error.message, "err");
+    }
+  }
+
+  async function showDecrypted(path) {
+    try {
+      const payload = await api("/api/decrypt", { path });
+      if (payload.text != null) {
+        $("editor").value = payload.text;
+        $("editor-wrap").style.display = "";
+        log("Расшифровано (" + payload.kind + ", " + payload.size + " байт)", "ok");
+      } else {
+        log("Внутри двоичные данные (" + payload.kind + ", " + payload.size +
+            " байт) — правка выполняется прямо в них.", "info");
+      }
+    } catch (error) {
+      log("Ошибка расшифровки: " + error.message, "err");
+    }
+  }
+
+  async function downloadDecrypted(path) {
+    try {
+      const payload = await api("/api/decrypt", { path });
+      const name = path.split(/[\\/]/).pop().replace(/\.lua$/i, "") + (payload.kind === "lua-bytecode" ? ".luac" : ".lua");
+      const blob = new Blob([payload.text != null ? payload.text : ""], { type: "text/plain;charset=utf-8" });
+      if (payload.text == null) {
+        log("Двоичный файл нельзя скачать как текст — используйте командную строку (decrypt).", "info");
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = name;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      log("Файл сохранён как " + name, "ok");
+    } catch (error) {
+      log("Ошибка: " + error.message, "err");
+    }
+  }
+
+  async function activateFile(path) {
+    try {
+      const payload = await api("/api/activate", { path, backup: true });
+      const report = payload.report || {};
+      (report.changes || []).forEach((change) => log(change, "ok"));
+      (report.notes || []).forEach((note) => log(note, "info"));
+      log(report.written ? "Готово: файл активирован, копия рядом (*.ablua.bak)" :
+        "Изменения не потребовались", "ok");
+      await loadState(state.root);
+      await loadFile(path);
+    } catch (error) {
+      log("Ошибка активации: " + error.message, "err");
+    }
+  }
+
+  async function restoreFile(path) {
+    try {
+      const payload = await api("/api/restore", { path });
+      log("Файл восстановлен из копии: " + (payload.report.backup || ""), "ok");
+      await loadState(state.root);
+      await loadFile(path);
+    } catch (error) {
+      log("Ошибка отката: " + error.message, "err");
+    }
+  }
+
+  async function activateAll() {
+    try {
+      const payload = await api("/api/activate_all", { root: state.root || $("browse-path").value });
+      (payload.reports || []).forEach((report) => {
+        if (report.error) { log(report.error, "err"); return; }
+        log((report.path || "") + ": " + ((report.changes || []).join("; ") || "без изменений"),
+            report.written ? "ok" : "info");
+      });
+      await loadState(state.root);
+    } catch (error) {
+      log("Ошибка: " + error.message, "err");
+    }
+  }
+
+  async function browse(path) {
+    try {
+      const payload = await api("/api/list?path=" + encodeURIComponent(path));
+      const listing = payload.listing;
+      $("browse-path").value = listing.path;
+      $("listing").innerHTML = "";
+      listing.dirs.forEach((name) => {
+        const li = document.createElement("li");
+        li.innerHTML = '<span>📁 <a href="#" class="link">' + escapeHtml(name) + "</a></span>";
+        li.querySelector("a").onclick = (event) => {
+          event.preventDefault();
+          browse(listing.path.replace(/[\\/]+$/, "") + "/" + name);
+        };
+        $("listing").appendChild(li);
+      });
+      listing.files.forEach((file) => {
+        const li = document.createElement("li");
+        const full = listing.path.replace(/[\\/]+$/, "") + "/" + file.name;
+        const link = document.createElement("a");
+        link.href = "#";
+        link.className = "link";
+        link.textContent = file.name;
+        link.onclick = (event) => { event.preventDefault(); loadFile(full); };
+        const wrap = document.createElement("span");
+        wrap.appendChild(link);
+        const size = document.createElement("span");
+        size.className = "size";
+        size.textContent = file.size + " Б";
+        li.appendChild(wrap);
+        li.appendChild(size);
+        $("listing").appendChild(li);
+      });
+    } catch (error) {
+      log("Ошибка обзора: " + error.message, "err");
+    }
+  }
+
+  async function saveText() {
+    if (!state.selected) { log("Сначала выберите файл", "err"); return; }
+    try {
+      const payload = await api("/api/save", { path: state.selected, text: $("editor").value, backup: true });
+      (payload.changes || []).forEach((change) => log(change, "ok"));
+      if (!(payload.changes || []).length) log("Флаги уже выключены — текст сохранён как есть", "info");
+      log("Файл пересобран и зашифрован заново", "ok");
+      await loadFile(state.selected);
+    } catch (error) {
+      log("Ошибка сохранения: " + error.message, "err");
+    }
+  }
+
+  $("scan-btn").onclick = () => {
+    const root = $("root-input").value.trim();
+    loadState(root);
+  };
+  $("letsgo").onclick = activateAll;
+  $("browse-go").onclick = () => browse($("browse-path").value.trim());
+  $("browse-up").onclick = () => browse($("browse-path").value.trim().replace(/[\\/][^\\/]*$/, "") || "/");
+  $("save-btn").onclick = saveText;
+
+  loadState("").then(() => {
+    if (state.root) browse(state.root);
+  });
+  fetch("/api/state").then(() => {}).catch(() => {});
+  log("Интерфейс загружен. Файлы изменяются только по вашей команде.", "info");
+})();
+</script>
+</body>
+</html>
